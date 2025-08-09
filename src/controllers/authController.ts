@@ -1,14 +1,19 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import prisma from '../config/database';
+import { z } from 'zod';
+import prisma from '../factories/database-factory';
 
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+      return res.status(422).json({ message: 'Email and password are required' });
+    }
+
+    if (password.length < 8) {
+      return res.status(422).json({ message: 'Password must be at least 8 characters long' });
     }
     
     const existingUser = await prisma.user.findUnique({ 
@@ -20,7 +25,6 @@ export const register = async (req: Request, res: Response) => {
     }
     
     const hashedPassword = await bcrypt.hash(password, 10);
-    
     const user = await prisma.user.create({
       data: {
         email,
@@ -34,6 +38,18 @@ export const register = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(422).json({
+        message: 'Validation failed',
+        errors: error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+          code: issue.code
+        }))
+      });
+    }
+
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -67,7 +83,7 @@ export const getToken = async (req: Request, res: Response) => {
     
     return res.json({
       token,
-      expiresIn: 86400,
+      expiresIn: 86422,
       tokenType: 'Bearer'
     });
   } catch (error) {

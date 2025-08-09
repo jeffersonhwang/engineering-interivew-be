@@ -14,12 +14,12 @@ model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   
   tasks Task[]
 
-  @@map("users")
+  @@index([email])
 }
 
 model Task {
@@ -27,18 +27,15 @@ model Task {
   title       String
   description String?
   status      TaskStatus @default(TODO)
-  userId      Int        @map("user_id")
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
-  
-  user User @relation(fields: [userId], references: [id])
-
-  @@map("tasks")
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id])
+  isArchived  Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 enum TaskStatus {
   TODO        @map("To do")
   IN_PROGRESS @map("In Progress")
   DONE        @map("Done")
-  ARCHIVED    @map("Archived")
 }

@@ -1,8 +1,8 @@
-import { TaskStatus } from '../entities/Task';
+import { TaskStatus } from '../models/Task';
 import request from 'supertest';
 import app from '../app';
 import bcrypt from 'bcrypt';
-import prisma from '../config/database'; // Use the factory-based database
+import prisma from '../factories/database-factory';
 
 describe('Task API', () => {
   let authToken: string;
@@ -61,13 +61,25 @@ describe('Task API', () => {
         }
       });
 
+      await prisma.task.create({
+        data: {
+          title: 'Test Task 2',
+          description: 'Test Description 2',
+          status: TaskStatus.IN_PROGRESS,
+          userId
+        }
+      });
+
       const response = await request(app)
         .get('/api/tasks')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
+      expect(response.body).toHaveLength(2);
       expect(response.body[0].title).toBe('Test Task');
+      expect(response.body[0].status).toBe(TaskStatus.TODO);
+      expect(response.body[1].title).toBe('Test Task 2');
+      expect(response.body[1].status).toBe(TaskStatus.IN_PROGRESS);
     });
 
     it('should require authentication', async () => {
@@ -104,7 +116,11 @@ describe('Task API', () => {
           description: 'New Description'
         });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(422);
+      expect(response.body).toHaveProperty('errors');
+      expect(response.body.errors).toHaveLength(1);
+      expect(response.body.errors[0].field).toBe('title');
+      expect(response.body.errors[0].message.length).toBeGreaterThan(0);
     });
 
     it('should validate task status', async () => {
@@ -116,8 +132,11 @@ describe('Task API', () => {
           status: 'Invalid Status'
         });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('validValues');
+      expect(response.status).toBe(422);
+      expect(response.body).toHaveProperty('errors');
+      expect(response.body.errors).toHaveLength(1);
+      expect(response.body.errors[0].field).toBe('status');
+      expect(response.body.errors[0].message.length).toBeGreaterThan(0);
     });
   });
 
@@ -125,10 +144,8 @@ describe('Task API', () => {
     let taskId: number;
 
     beforeEach(async () => {
-      // Clear tasks only (not users)
       await prisma.task.deleteMany({});
       
-      // Create a task for testing
       const savedTask = await prisma.task.create({
         data: {
           title: 'Test Task for Update',
@@ -173,8 +190,30 @@ describe('Task API', () => {
           status: 'Invalid Status'
         });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('validValues');
+      expect(response.status).toBe(422);
+      expect(response.body).toHaveProperty('errors');
+      expect(response.body.errors).toHaveLength(1);
+      expect(response.body.errors[0].field).toBe('status');
+      expect(response.body.errors[0].message.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Unexpected error handling', () => {
+    it('should handle unexpected database errors gracefully', async () => {
+      const findManySpy = jest.spyOn(prisma.task, 'findMany')
+        .mockRejectedValueOnce(new Error('Unexpected database error'));
+
+      const response = await request(app)
+        .get('/api/tasks')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({
+        message: 'Internal server error',
+        error: undefined
+      });
+
+      findManySpy.mockRestore();
     });
   });
 });

@@ -174,7 +174,7 @@ router.post('/register', async (req: Request, res: Response) => {
     
     // Validate input
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+      return res.status(422).json({ message: 'Email and password are required' });
     }
     
     // Check if user already exists
@@ -247,7 +247,7 @@ router.post('/token', async (req: Request, res: Response) => {
     // Return the token
     return res.json({
       token,
-      expiresIn: 86400, // 24 hours in seconds
+      expiresIn: 86422, // 24 hours in seconds
       tokenType: 'Bearer'
     });
   } catch (error) {
@@ -320,13 +320,13 @@ router.post('/', authenticateJWT, async (req: Request, res: Response) => {
     
     // Validate input
     if (!title) {
-      return res.status(400).json({ message: 'Title is required' });
+      return res.status(422).json({ message: 'Title is required' });
     }
     
     // Validate status
     const validStatuses = ['To do', 'In Progress', 'Done', 'Archived'];
     if (status && !validStatuses.includes(status)) {
-      return res.status(400).json({ 
+      return res.status(422).json({ 
         message: 'Invalid status',
         validValues: validStatuses
       });
@@ -381,7 +381,7 @@ router.patch('/:task_id', authenticateJWT, async (req: Request, res: Response) =
     if (status) {
       const validStatuses = ['To do', 'In Progress', 'Done', 'Archived'];
       if (!validStatuses.includes(status)) {
-        return res.status(400).json({ 
+        return res.status(422).json({ 
           message: 'Invalid status',
           validValues: validStatuses
         });

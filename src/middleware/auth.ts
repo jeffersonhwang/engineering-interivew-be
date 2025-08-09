@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-// Extend Express Request interface
 declare global {
   namespace Express {
     interface Request {
@@ -29,6 +28,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
     req.user = decoded;
     next();
   } catch (error) {
+    console.error('Error verifying token:', error);
     return res.status(403).json({ message: 'Invalid or expired token' });
   }
 };

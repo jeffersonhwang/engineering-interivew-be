@@ -1,18 +1,16 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './routes/authRoutes';
 import taskRoutes from './routes/taskRoutes';
-import prisma from './config/database';
+import prisma from './factories/database-factory';
 
 dotenv.config();
 
 const app = express();
 
 app.use(express.json());
-app.use(cors());
 app.use(helmet());
 
 app.use('/api/auth', authRoutes);
@@ -30,7 +28,6 @@ export const startServer = async () => {
       console.log(`Server running on port ${PORT}`);
     });
 
-    // Graceful shutdown
     process.on('SIGINT', async () => {
       console.log('Shutting down gracefully...');
       await prisma.$disconnect();
@@ -47,7 +44,6 @@ export const startServer = async () => {
   }
 };
 
-// Only start server if this file is run directly (not imported)
 if (require.main === module) {
   startServer();
 }

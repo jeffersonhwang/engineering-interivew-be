@@ -1,23 +1,16 @@
 import { Request, Response } from 'express';
-import { TaskStatus } from '../entities/Task';
-import prisma from '../config/database';
+import { Task } from '../types';
+import prisma from '../factories/database-factory';
+import { z } from 'zod';
 
 export const getAllTasks = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userId;
-    
-    // Validate user authentication
-    if (!userId) {
-      return res.status(401).json({ message: 'User not authenticated' });
-    }
-    
+    const userId = req.user!.userId;
+
     const tasks = await prisma.task.findMany({
-      where: { userId },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      where: { userId }
     });
-    
+
     return res.json(tasks);
   } catch (error) {
     console.error('Error fetching tasks:', error);
@@ -27,32 +20,17 @@ export const getAllTasks = async (req: Request, res: Response) => {
 
 export const createTask = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userId;
-    const { title, description, status = TaskStatus.TODO } = req.body;
+    const userId = req.user!.userId;
+    const { title, description, status, isArchived } = req.body;
     
-    // Validate user authentication
-    if (!userId) {
-      return res.status(401).json({ message: 'User not authenticated' });
-    }
+    const taskInput: Task = { title, description, status, isArchived };
     
-    if (!title) {
-      return res.status(400).json({ message: 'Title is required' });
-    }
-    
-    const validStatuses = Object.values(TaskStatus);
-    if (status && !validStatuses.includes(status)) {
-      return res.status(400).json({ 
-        message: 'Invalid status',
-        validValues: validStatuses
-      });
-    }
-    
-    // Create task
     const savedTask = await prisma.task.create({
       data: {
-        title,
-        description,
-        status,
+        title: taskInput.title!,
+        description: taskInput.description,
+        status: taskInput.status,
+        isArchived: taskInput.isArchived,
         userId
       }
     });
@@ -60,6 +38,18 @@ export const createTask = async (req: Request, res: Response) => {
     return res.status(201).json(savedTask);
   } catch (error) {
     console.error('Error creating task:', error);
+    
+    if (error instanceof z.ZodError) {
+      return res.status(422).json({
+        message: 'Validation failed',
+        errors: error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+          code: issue.code
+        }))
+      });
+    }
+
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -67,53 +57,46 @@ export const createTask = async (req: Request, res: Response) => {
 export const updateTask = async (req: Request, res: Response) => {
   try {
     const taskId = parseInt(req.params.task_id);
-    const userId = req.user?.userId;
-    const { title, description, status } = req.body;
+    const userId = req.user!.userId;
+    const { title, description, status, isArchived } = req.body;
     
-    // Validate user authentication
-    if (!userId) {
-      return res.status(401).json({ message: 'User not authenticated' });
-    }
+    const taskInput: Task = { title, description, status, isArchived };
     
-    // Find the task
     const task = await prisma.task.findUnique({
       where: { id: taskId }
     });
     
-    // Check if task exists
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
-    
-    // Check ownership
+
     if (task.userId !== userId) {
-      return res.status(403).json({ message: 'You do not have permission to update this task' });
+      return res.status(403).json({ message: 'You are not authorized to update this task' });
     }
-    
-    // Validate status if provided
-    if (status) {
-      const validStatuses = Object.values(TaskStatus);
-      if (!validStatuses.includes(status)) {
-        return res.status(400).json({ 
-          message: 'Invalid status',
-          validValues: validStatuses
-        });
-      }
-    }
-    
-    // Update task
+
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
       data: {
-        ...(title !== undefined && { title }),
-        ...(description !== undefined && { description }),
-        ...(status !== undefined && { status })
+        ...taskInput,
+        userId
       }
     });
     
     return res.json(updatedTask);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating task:', error);
+    
+    if (error instanceof z.ZodError) {
+      return res.status(422).json({
+        message: 'Validation failed',
+        errors: error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+          code: issue.code
+        }))
+      });
+    }
+
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
