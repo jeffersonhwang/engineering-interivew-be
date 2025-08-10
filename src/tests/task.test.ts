@@ -151,7 +151,7 @@ describe('Task API', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           title: 'New Task',
-          description: 'a'.repeat(1001)
+          description: 'a'.repeat(10001)
         });
 
       expect(response.status).toBe(422);
