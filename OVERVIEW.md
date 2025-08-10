@@ -1,53 +1,21 @@
 # Task Management API
 
-A RESTful API for task management built with Express.js, TypeScript, and PostgreSQL.
+A RESTful API for task management built with Express.js, TypeScript, PrismaORM and PostgreSQL.
 
 ## Features
 
 - User registration and authentication
 - Task creation and management
-- Task status updates
 
 ## Requirements
 
-- Node.js (v16+)
+- Node.js (v20+)
 - PostgreSQL
-- Docker and Docker Compose (optional)
+- Docker and Docker Compose
 
 ## Getting Started
 
 ### Local Development
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/task-management-api.git
-   cd task-management-api
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Set up environment variables:
-   ```
-   cp .env.example .env
-   ```
-   Edit the `.env` file with your database credentials and JWT secret.
-
-4. Start PostgreSQL and create a database named `task_app`.
-
-5. Run migrations:
-   ```
-   npm run migration:run
-   ```
-
-6. Start the development server:
-   ```
-   npm run dev
-   ```
-
-### Using Docker
 
 1. Clone the repository:
    ```
@@ -63,6 +31,8 @@ A RESTful API for task management built with Express.js, TypeScript, and Postgre
 3. The API will be available at http://localhost:3000
 
 ## API Endpoints
+
+Optional: Install VSCode extension [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) and use [calls.http](/calls.http) file to execute requests against the endpoints.
 
 ### Authentication
 
@@ -93,7 +63,8 @@ Authorization: Bearer your-jwt-token
   {
     "title": "Complete project",
     "description": "Finish the task management API",
-    "status": "To do"
+    "status": "To do",
+    "isArchived": false
   }
   ```
 
@@ -109,9 +80,6 @@ Authorization: Bearer your-jwt-token
 
 Run tests:
 ```
-npm test
+docker-compose run --rm app sh -c "export DATABASE_URL=postgresql://postgres:postgres@db:5432/task_app_test && npx prisma db push && npm test"
 ```
 
-## License
-
-ISC

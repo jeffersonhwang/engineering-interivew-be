@@ -32,16 +32,5 @@ You will be creating an API for a task application.
 - Apollo Server GraphQL
 - Logging
 
-# Start the application
-
-Run `docker-compose up `
-
-# Run tests
-
-```bash
-docker-compose run --rm app sh -c "
-  export DATABASE_URL=postgresql://postgres:postgres@db:5432/task_app_test &&
-  npx prisma db push &&
-  npm test
-"
-```
+# Additional Links
+See [overview](/OVERVIEW.md) for instructions on running the app and tests.
