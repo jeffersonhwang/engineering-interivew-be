@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Task } from '../types';
-import prisma from '../factories/database-factory';
+import prisma from '../services/prisma';
 import { z } from 'zod';
 
 export const getAllTasks = async (req: Request, res: Response) => {

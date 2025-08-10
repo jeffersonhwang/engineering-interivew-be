@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import prisma from '../factories/database-factory';
+import prisma from '../services/prisma';
 
 export const register = async (req: Request, res: Response) => {
   try {

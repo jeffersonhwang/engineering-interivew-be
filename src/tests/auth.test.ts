@@ -1,7 +1,7 @@
 import request from 'supertest';
 import app from '../app';
 import bcrypt from 'bcrypt';
-import prisma from '../factories/database-factory';
+import prisma from '../services/prisma';
 
 describe('Auth API', () => {
   beforeAll(async () => {

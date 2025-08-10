@@ -2,7 +2,7 @@ import { TaskStatus } from '../models/Task';
 import request from 'supertest';
 import app from '../app';
 import bcrypt from 'bcrypt';
-import prisma from '../factories/database-factory';
+import prisma from '../services/prisma';
 
 describe('Task API', () => {
   let authToken: string;

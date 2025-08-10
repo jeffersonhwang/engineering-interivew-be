@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './routes/authRoutes';
 import taskRoutes from './routes/taskRoutes';
-import prisma from './factories/database-factory';
+import prisma from './services/prisma';
 
 dotenv.config();
 
