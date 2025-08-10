@@ -31,3 +31,6 @@ You will be creating an API for a task application.
 
 - Apollo Server GraphQL
 - Logging
+
+# Additional Links
+See [overview](/OVERVIEW.md) for instructions on running the app and tests.

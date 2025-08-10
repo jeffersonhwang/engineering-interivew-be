@@ -1,0 +1,50 @@
+@email = test@test.com
+@password = 12345678
+
+### Register a new user
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "{{email}}",
+    "password": "{{password}}"
+}
+
+### Get a token
+# @name GetToken
+POST http://localhost:3000/api/auth/token
+Content-Type: application/json
+Authorization: Basic {{email}}:{{password}}
+
+### Get the token from the response
+@token = {{GetToken.response.body.token}}
+
+### Create a task
+# @name CreateTask
+POST http://localhost:3000/api/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Test Task 1",
+    "description": "Test description",
+    "status": "TODO",
+    "isArchived": true
+}
+
+### Get the task id from the response
+@taskId = {{CreateTask.response.body.id}}
+
+### Get all tasks
+GET http://localhost:3000/api/tasks
+Authorization: Bearer {{token}}
+
+### Update a task 
+PATCH http://localhost:3000/api/tasks/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "isArchived": false,
+    "title": "Not null"
+}
